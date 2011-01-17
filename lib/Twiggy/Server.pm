@@ -313,10 +313,8 @@ sub _handle_res {
         $res->(
             sub {
                 my $res = shift;
-
-                if ( @$res < 2 ) {
-                    croak "Insufficient arguments";
-                } elsif ( @$res == 2 ) {
+                
+                if ( ref $res eq 'ARRAY' and @$res == 2 ) {
                     my ( $status, $headers ) = @$res;
 
                     $self->_flush($sock);
@@ -328,8 +326,7 @@ sub _handle_res {
 
                     return $writer;
                 } else {
-                    my ( $status, $headers, $body, $post ) = @$res;
-                    $self->_handle_res($sock, [ $status, $headers, $body ]);
+                    $self->_handle_res($sock, $res);
                 }
             },
             $sock,
