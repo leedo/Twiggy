@@ -299,6 +299,11 @@ sub _run_app {
     }
 
     my $res = Plack::Util::run_app $app, $env;
+    $self->_handle_res($sock, $res);
+}
+
+sub _handle_res {
+    my ($self, $sock, $res) = @_;
 
     if ( ref $res eq 'ARRAY' ) {
         $self->_write_psgi_response($sock, $res);
@@ -324,8 +329,7 @@ sub _run_app {
                     return $writer;
                 } else {
                     my ( $status, $headers, $body, $post ) = @$res;
-                    my $cv = $self->_write_psgi_response($sock, [ $status, $headers, $body ]);
-                    $cv->cb(sub { $post->() }) if $post;
+                    $self->_handle_res($sock, [ $status, $headers, $body ]);
                 }
             },
             $sock,
