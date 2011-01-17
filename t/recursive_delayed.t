@@ -14,6 +14,7 @@ local @Plack::Test::Suite::TEST = (
       my $req = HTTP::Request->new(GET => "http://localhost/hello");
       my $res = $cb->($req);
       is $res->code, 200;
+      is $res->content, "hello!";
     },
     sub {
       my $env = shift;
@@ -27,7 +28,31 @@ local @Plack::Test::Suite::TEST = (
         });
       };
     }
+  ],
+  [
+    'Recursive delay with writer',
+    sub {
+      my $cb = shift;
+      my $req = HTTP::Request->new(GET => "http://localhost/hello");
+      my $res = $cb->($req);
+      is $res->code, 200;
+      is $res->content, "hello!";
+    },
+    sub {
+      my $env = shift;
+      return sub {
+        shift->(sub {
+          my $writer = shift->([
+            200,
+            ["Content-Type" => "text/plain"],
+          ]);
+          $writer->write("hello!");
+          $writer->close;
+        });
+      };
+    }
   ]
+
 );
 
 # prevent Lint middleware from being used
